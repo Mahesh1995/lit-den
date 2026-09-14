@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maheshwaran's Lit. Den — Everything I've Read</title>
+<meta name="description" content="An ethereal, horizontally scrolling shelf of every book I've finished — and a to-read shelf anyone can add to. Recommend me a book." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Karla:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="styles.css" />
+<script>
+  // set the theme before first paint to avoid a light/dark flash
+  (function () {
+    try {
+      var saved = localStorage.getItem("carollia-library:theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<div class="corner-controls">
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/>
+    </svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/>
+    </svg>
+  </button>
+  <button type="button" class="owner-toggle" id="ownerToggle" aria-label="Owner sign-in" title="Owner sign-in">
+    <svg class="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="5" y="11" width="14" height="9" rx="1.6"/>
+      <path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>
+    </svg>
+    <svg class="icon-unlock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="5" y="11" width="14" height="9" rx="1.6"/>
+      <path d="M8 11V7.5a4 4 0 0 1 7.4-2"/>
+    </svg>
+    <span class="owner-toggle-label">Owner</span>
+  </button>
+</div>
+
+<main class="page grain">
+  <div class="frame">
+
+    <header class="hero reveal" id="heroReveal">
+      <button type="button" class="site-name" id="siteNameBtn" aria-label="Scroll to top">Maheshwaran's Lit. Den</button>
+      <p class="eyebrow">A personal archive</p>
+      <h1 class="hero-title" id="heroTitle" aria-label="Welcome to my library">
+        <span id="heroTitleFallback" class="hero-title-fallback">Welcome to my library</span>
+        <span id="heroTitleSvgWrap" class="hero-title-svg-wrap" aria-hidden="true"></span>
+      </h1>
+      <p class="volume-count" id="volumeCount"></p>
+
+      <div class="hero-actions">
+        <button type="button" class="recommend-btn" id="addBookBtn">+ Add a book</button>
+        <button type="button" class="recommend-btn ghost" id="recommendBtn">Recommend a book</button>
+      </div>
+
+      <div class="search-bar">
+        <div class="search-field">
+          <input type="text" id="searchInput" class="search-input" placeholder="What are you looking for?" autocomplete="off" />
+          <p class="search-status" id="searchStatus" hidden></p>
+        </div>
+
+        <div class="filter-row">
+          <button type="button" class="filter-trigger" id="filterTrigger" aria-expanded="false" aria-controls="filterPanel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            <span>Filter</span>
+            <span class="filter-count" id="filterCount" hidden>0</span>
+          </button>
+          <div class="active-chips" id="activeChips"></div>
+        </div>
+
+        <div class="filter-panel" id="filterPanel" hidden>
+          <div class="filter-section">
+            <p class="filter-section-label">Format</p>
+            <div class="chip-wrap" id="formatChips"></div>
+          </div>
+          <div class="filter-section">
+            <p class="filter-section-label">Genre</p>
+            <div class="chip-wrap" id="genreChips"></div>
+          </div>
+          <div class="filter-section">
+            <p class="filter-section-label">Mood</p>
+            <div class="chip-wrap" id="moodChips"></div>
+          </div>
+          <div class="filter-panel-footer">
+            <button type="button" class="clear-filters-btn" id="clearFiltersBtn">Clear all</button>
+            <button type="button" class="filter-done-btn" id="filterDoneBtn">Done</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section aria-label="Bookshelf" class="shelf-section reveal" id="shelfReveal">
+      <div id="mainShelfMount"></div>
+    </section>
+
+    <section aria-label="Currently reading" class="shelf-section reveal" id="readingSection" hidden>
+      <header class="shelf-header">
+        <p class="eyebrow">Not finished yet</p>
+        <p class="shelf-title">Current read</p>
+      </header>
+      <div id="readingShelfMount"></div>
+    </section>
+
+    <section aria-label="Recommended by visitors" class="shelf-section visitors reveal" id="visitorSection" hidden>
+      <header class="shelf-header">
+        <p class="eyebrow">The wishlist</p>
+        <p class="shelf-title">Next in line</p>
+        <p class="shelf-count" id="toReadCount"></p>
+      </header>
+      <div id="toReadShelfMount"></div>
+    </section>
+
+  </div>
+</main>
+
+<div id="modalMount"></div>
+<div id="dialogMount"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+<script src="books-data.js"></script>
+<script src="wishlist-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

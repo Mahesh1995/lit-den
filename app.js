@@ -2599,19 +2599,36 @@
       if (header) {
         window.gsap.fromTo(header,
           { opacity: 0, y: 18, filter: "blur(10px)" },
-          { opacity: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power3.out" }
+          {
+            opacity: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power3.out",
+            // animating `filter` sometimes leaves the element on a stuck
+            // GPU-composited layer that never gets its final repaint —
+            // seen on mobile viewports specifically, where the section
+            // stayed blurred-looking forever despite every computed style
+            // already reporting the finished state. Clearing the inline
+            // styles once the tween ends tears that layer down and forces
+            // a normal repaint against the plain stylesheet rules.
+            onComplete: function () { window.gsap.set(header, { clearProps: "filter" }); },
+          }
         );
       }
       window.gsap.fromTo(visibleBooks,
         { opacity: 0, y: 14 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: { each: 0.02, from: "start" } }
+        {
+          opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: { each: 0.02, from: "start" },
+        }
       );
     } else if (window.gsap) {
       // a soft blur-to-sharp entrance (the react-bits "BlurText" look),
       // built with plain GSAP so it works without React/shadcn
       window.gsap.fromTo(el,
         { opacity: 0, y: 18, filter: "blur(10px)" },
-        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power3.out" }
+        {
+          opacity: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power3.out",
+          // see the shelf-header branch above — filter animations can
+          // leave a stuck composited layer that never repaints
+          onComplete: function () { window.gsap.set(el, { clearProps: "filter" }); },
+        }
       );
     } else {
       el.classList.add("in");
@@ -2680,6 +2697,21 @@
       },
     });
   }
+
+  // Chromium has a known gap where a tab backgrounded mid-animation (the
+  // page loads while the tab isn't visible — switching apps on mobile
+  // while it loads, opening it in a background tab, etc.) can come back
+  // with elements sitting at their fully-correct final computed styles
+  // but never actually repainted — the animation's numbers are right,
+  // the pixels on screen just weren't updated to match. A cheap forced
+  // reflow when the tab regains visibility is the standard fix.
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) return;
+    var prev = document.body.style.display;
+    document.body.style.display = "none";
+    void document.body.offsetHeight;
+    document.body.style.display = prev;
+  });
 
   function init() {
     runCursiveTitle();
